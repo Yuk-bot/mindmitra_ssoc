@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Optional
 
-from app.models.user import User, UserCreate, Token, TokenData
+from app.models.user import User, UserCreate, Token, TokenData, UserRole
 from app.services.auth import auth_service
 from app.core.logging import get_logger
 
@@ -35,6 +35,16 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> User:
     except Exception as e:
         logger.error(f"Authentication error: {e}")
         raise credentials_exception
+
+
+async def get_current_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin role — raises 403 for non-admin authenticated users."""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return current_user
 
 
 @router.post("/register", response_model=User)
