@@ -6,7 +6,7 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 from app.core.config import settings
-from app.core.database import init_db
+from app.core.database import init_db,close_db
 from app.api.v1.api import api_router
 from app.core.logging import setup_logging
 from app.core.middleware import RequestLoggingMiddleware
@@ -39,6 +39,8 @@ async def lifespan(app: FastAPI):
     setup_logging()
     await init_db()
     yield
+    #disconnects when app stops
+    await close_db()
     # Shutdown
     # Cleanup resources if needed
 
